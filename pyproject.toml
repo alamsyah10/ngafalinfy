@@ -1,0 +1,67 @@
+[project]
+name = "Ngafalinfy"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Alamsyah Imanudin", email = "alamsyah.imanudin0209@gmail.com"},
+]
+dependencies = ["fastapi>=0.116.1", "uvicorn[standard]>=0.35.0", "sqlalchemy>=2.0.43", "alembic>=1.16.5", "python-dotenv>=1.1.1", "pydantic-settings>=2.10.1", "pymysql>=1.1.2"]
+requires-python = "==3.13.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pdm]
+version = { source = "file", path = "src/__init__.py" }
+distribution = false
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ruff>=0.12.12",
+    "black>=25.1.0",
+    "pyright>=1.1.405",
+    "pytest>=8.4.2",
+    "httpx>=0.28.1",
+]
+
+[tool.pdm.scripts]
+pyright = "pyright ./src"
+pyright_test = "pyright ./tests"
+ruff_lint = "ruff check ./src"
+ruff_lint_test = "ruff check ./tests"
+ruff_format = "ruff format ./src"
+ruff_format_test = "ruff format ./tests"
+test = "pytest ./tests"
+format = { composite = ["ruff_format", "ruff_format_test"] }
+lint = { composite = [
+    "ruff_lint",
+    "ruff_lint_test",
+    "pyright",
+    "pyright_test",
+] }
+check = { composite = ["format", "lint", "test"] }
+
+[tool.pytest.ini_options]
+filterwarnings = ["ignore::FutureWarning"]
+addopts = "--cov=src"
+
+[tool.coverage.run]
+omit = ["*/__init__.py", "src/main.py", "src/domain/repository/*"]
+
+[tool.ruff]
+lint.select = [
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+    "N",  # pep8-naming
+    "Q",  # flake8-quotes
+    "UP", # pyupgrade
+    "W",  # pycodestyle
+]
+lint.ignore = ["E501"]
+target-version = "py311"
+src = ["src"]
+exclude = ["./migrations/versions/*"]
+
+[tool.ruff.lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = ["src", "tests"]

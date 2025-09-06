@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  api:
+    container_name: ngafalinfy-api
+    build:
+      context: .
+      dockerfile: ./docker/api/Dockerfile
+      target: development
+    volumes:
+      - .:/project
+      - pypackages:/project/__pypackages__
+    ports:
+      - 8080:8000
+    depends_on:
+      - db
+    environment:
+      APP_ENV: "development"
+    env_file:
+      - .env.docker
+    working_dir: /project/scripts
+    command: bash -c "./run.sh"
+  db:
+    container_name: ngafalinfy-db
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./docker/db/Dockerfile
+    environment:
+      APP_ENV: "development"
+    env_file:
+      - .env.docker
+    volumes:
+      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./log/db:/var/log/mysql
+      - mysql_data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+volumes:
+  mysql_data:
+  pypackages:
