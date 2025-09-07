@@ -5,7 +5,21 @@ description = "Default template for PDM package"
 authors = [
     {name = "Alamsyah Imanudin", email = "alamsyah.imanudin0209@gmail.com"},
 ]
-dependencies = ["fastapi>=0.116.1", "uvicorn[standard]>=0.35.0", "sqlalchemy>=2.0.43", "alembic>=1.16.5", "python-dotenv>=1.1.1", "pydantic-settings>=2.10.1", "pymysql>=1.1.2"]
+
+dependencies = [
+    "fastapi>=0.116.1",
+    "uvicorn[standard]>=0.35.0",
+    "sqlalchemy>=2.0.43",
+    "alembic>=1.16.5",
+    "python-dotenv>=1.1.1",
+    "pydantic-settings>=2.10.1",
+    "pymysql>=1.1.2",
+    "authlib>=1.6.3",
+    "python-jose[cryptography]>=3.5.0",
+    "itsdangerous>=2.2.0",
+    "python-json-logger>=3.3.0"
+]
+
 requires-python = "==3.13.*"
 readme = "README.md"
 license = {text = "MIT"}
@@ -13,15 +27,6 @@ license = {text = "MIT"}
 [tool.pdm]
 version = { source = "file", path = "src/__init__.py" }
 distribution = false
-
-[tool.pdm.dev-dependencies]
-dev = [
-    "ruff>=0.12.12",
-    "black>=25.1.0",
-    "pyright>=1.1.405",
-    "pytest>=8.4.2",
-    "httpx>=0.28.1",
-]
 
 [tool.pdm.scripts]
 pyright = "pyright ./src"
@@ -65,3 +70,14 @@ exclude = ["./migrations/versions/*"]
 [tool.ruff.lint.isort]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 known-first-party = ["src", "tests"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.12",
+    "black>=25.1.0",
+    "pyright>=1.1.405",
+    "pytest>=8.4.2",
+    "httpx>=0.28.1",
+    "authlib>=1.6.3",
+    "pytest-cov>=6.3.0",
+]
