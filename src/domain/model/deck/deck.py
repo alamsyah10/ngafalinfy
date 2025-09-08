@@ -4,7 +4,7 @@ from datetime import datetime
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Deck:
-    id: int = field(increment=True)
+    id: int | None = None
     name: str = field(compare=False)
     owner_id: int
     description: str | None = field(default=None, compare=False)

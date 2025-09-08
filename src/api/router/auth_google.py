@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Request, status
-from sqlalchemy.orm import Session
 
 from src.api.composition.auth_google import (
     google_callback_usecase,
@@ -13,8 +12,10 @@ from src.api.error_schema.common import (
     ErrorMessageOAuthAuthenticationFailed,
     ErrorMessageOAuthInvalidUserInfo,
 )
-from src.domain.model.auth import AuthTokenResponse
-from src.infrastructure.db.core import get_session
+from src.usecase.user.user_schema import (
+    AuthTokenResponse,
+)
+from src.usecase.user.user_writeable_usecase import UserWriteableUsecase
 
 router = APIRouter(prefix="/auth/google", tags=["auth:google"])
 
@@ -28,11 +29,14 @@ router = APIRouter(prefix="/auth/google", tags=["auth:google"])
             "description": "OAuth client not configured",
         }
     },
+    operation_id="google_login",
     summary="Start Google OAuth login",
-    description="Redirects the user to Google for authentication.",
 )
-async def google_login(request: Request):
-    return await google_login_usecase(request)
+async def google_login(
+    request: Request,
+    usecase: UserWriteableUsecase = Depends(google_login_usecase),
+):
+    return await usecase.login_redirect(request)
 
 
 @router.get(
@@ -53,11 +57,14 @@ async def google_login(request: Request):
             "description": "Authentication failed",
         },
     },
+    operation_id="google_callback",
     summary="Handle Google OAuth callback",
-    description="Exchanges the Google OAuth code for a token and logs in the user.",
 )
-async def google_callback(request: Request, db: Session = Depends(get_session)):
-    return await google_callback_usecase(request, db)
+async def google_callback(
+    request: Request,
+    usecase: UserWriteableUsecase = Depends(google_callback_usecase),
+):
+    return await usecase.oauth_callback(request)
 
 
 @router.post(
@@ -69,8 +76,11 @@ async def google_callback(request: Request, db: Session = Depends(get_session)):
             "description": "No active session",
         },
     },
+    operation_id="google_logout",
     summary="Log out",
-    description="Clears the authentication cookie and ends the session.",
 )
-async def google_logout(request: Request):
-    return google_logout_usecase(request)
+async def google_logout(
+    request: Request,
+    usecase: UserWriteableUsecase = Depends(google_logout_usecase),
+):
+    return usecase.logout(request)

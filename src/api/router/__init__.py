@@ -1,3 +1,3 @@
-from . import auth_google, checkhealth
+from . import auth_google, checkhealth, decks
 
-__all__ = ["auth_google", "checkhealth"]
+__all__ = ["auth_google", "checkhealth", "decks"]

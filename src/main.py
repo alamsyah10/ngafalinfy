@@ -2,12 +2,13 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.api.log.logger import get_logger, init_logger
 from src.api.middleware.error_handling_middleware import ErrorHandlingMiddleware
 from src.api.middleware.router_logging_middleware import RouterLoggingMiddleware
-from src.api.router import auth_google, checkhealth
+from src.api.router import auth_google, checkhealth, decks
 from src.config import settings
 
 init_logger()
@@ -54,3 +55,5 @@ app.add_middleware(RouterLoggingMiddleware, logger=logger)
 # Routers
 app.include_router(auth_google.router)
 app.include_router(checkhealth.router)
+app.include_router(decks.router)
+add_pagination(app)

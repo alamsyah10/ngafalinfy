@@ -1,54 +1,49 @@
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
+from src.domain.model.user.user import User
 from src.domain.repository.user import UserRepository
-
-from .user_table import User
+from src.infrastructure.db.user.user_dto import UserDTO
 
 
 class UserRepositoryImpl(UserRepository):
-    entity_cls: type[User] = User
+    """
+    UserRepositoryImpl implements CRUD operations related User entity.
+    """
 
-    def __init__(self, db: Session) -> None:
-        self.db = db
+    def __init__(self, session: Session) -> None:
+        self.session = session
 
     def get_by_email(self, email: str) -> User | None:
-        return self.db.query(User).filter(User.email == email).first()
+        try:
+            user_dto = self.session.query(UserDTO).filter_by(email=email).one()
+        except NoResultFound:
+            return None
+        except:
+            raise
 
-    def create(
-        self,
-        *,
-        email: str,
-        display_name: str | None,
-        picture_url: str | None,
-        provider: str | None,
-        provider_sub: str | None,
-        is_active: bool = True,
-    ) -> User:
-        user = User(
-            email=email,
-            display_name=display_name,
-            picture_url=picture_url,
-            provider=provider,
-            provider_sub=provider_sub,
-            is_active=is_active,
-        )
-        self.db.add(user)
-        self.db.flush()
-        return user
+        return user_dto.to_entity()
+
+    def create(self, user: User) -> User:
+        user_dto = UserDTO.from_entity(user)
+
+        try:
+            self.session.add(user_dto)
+        except:
+            raise
+
+        self.session.flush()
+        return user_dto.to_entity()
 
     def upsert_google_identity(
         self, *, email: str, name: str | None, sub: str, picture: str | None
     ) -> User:
         user = self.get_by_email(email)
         if user is None:
-            return self.create(
-                email=email,
-                display_name=name,
-                provider="google",
-                provider_sub=sub,
-                picture_url=picture,
-                is_active=True,
+            user = User.new_google_user(
+                email=email, display_name=name, provider_sub=sub, picture_url=picture
             )
+            return self.create(user)
 
         if user.provider is None:
             user.provider = "google"
@@ -57,5 +52,5 @@ class UserRepositoryImpl(UserRepository):
         if picture and user.picture_url != picture:
             user.picture_url = picture
 
-        self.db.flush()
+        self.session.flush()
         return user
