@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 
-from src.infrastructure.db.user.user_table import User
+from src.infrastructure.db.user.user_table import UserTable
 
 
 class UserRepository(ABC):
-    entity_cls: type[User] = User
+    entity_cls: type[UserTable] = UserTable
 
     @abstractmethod
-    def get_by_email(self, email: str) -> User | None:
+    def get_by_email(self, email: str) -> UserTable | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -20,12 +20,12 @@ class UserRepository(ABC):
         provider: str | None,
         provider_sub: str | None,
         is_active: bool = True,
-    ) -> User:
+    ) -> UserTable:
         raise NotImplementedError
 
     @abstractmethod
     def upsert_google_identity(
         self, *, email: str, name: str | None, sub: str, picture: str | None
-    ) -> User:
+    ) -> UserTable:
         """Find existing user by email or create one. Update provider/sub/picture as needed."""
         raise NotImplementedError

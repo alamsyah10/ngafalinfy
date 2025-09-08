@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.domain.model.auth import AuthUserResponse
-from src.infrastructure.db.user.user_table import User
+from src.infrastructure.db.user.user_table import UserTable
 
 
 @dataclass
@@ -15,7 +15,7 @@ class UserDTO:
     is_active: bool
 
     @classmethod
-    def from_entity(cls, entity: User) -> "UserDTO":
+    def from_entity(cls, entity: UserTable) -> "UserDTO":
         return cls(
             id=entity.id,
             email=entity.email,
@@ -26,8 +26,8 @@ class UserDTO:
             is_active=entity.is_active,
         )
 
-    def to_entity(self) -> User:
-        return User(
+    def to_entity(self) -> UserTable:
+        return UserTable(
             id=self.id,
             email=self.email,
             display_name=self.display_name,
