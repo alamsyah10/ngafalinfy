@@ -1,8 +1,10 @@
 from collections.abc import Callable
+from typing import cast
 
 from authlib.integrations.starlette_client import OAuth
 
 from src.config import settings
+from src.usecase.user.user_writeable_usecase import OAuthClientProto
 
 
 def get_oauth() -> OAuth:
@@ -17,5 +19,10 @@ def get_oauth() -> OAuth:
     return oauth
 
 
-def get_oauth_client_factory(oauth: OAuth) -> Callable[[str], object | None]:
-    return lambda name: oauth.create_client(name) if name == "google" else None
+def get_oauth_client_factory(oauth: OAuth) -> Callable[[str], OAuthClientProto | None]:
+    def factory(name: str) -> OAuthClientProto | None:
+        if name != "google":
+            return None
+        return cast(OAuthClientProto | None, oauth.create_client(name))
+
+    return factory

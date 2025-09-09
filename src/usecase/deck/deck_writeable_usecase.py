@@ -39,7 +39,9 @@ class DeckWriteableUseCase:
     """
 
     @abstractmethod
-    def create_deck(self, deck: CreateDeckRequest, owner_id: int) -> DeckDigestResponse:
+    def create_deck(
+        self, deck_request: CreateDeckRequest, owner_id: int
+    ) -> DeckDigestResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -61,10 +63,14 @@ class DeckWriteableUseCaseImpl(DeckWriteableUseCase):
     def __init__(self, uow: DeckWriteableUseCaseUnitOfWork):
         self.uow = uow
 
-    def create_deck(self, deck: CreateDeckRequest, owner_id: int) -> DeckDigestResponse:
+    def create_deck(
+        self, deck_request: CreateDeckRequest, owner_id: int
+    ) -> DeckDigestResponse:
         try:
             deck = Deck.new(
-                name=deck.name, owner_id=owner_id, description=deck.description
+                name=deck_request.name,
+                owner_id=owner_id,
+                description=deck_request.description,
             )
             self.uow.deck_repository.create_deck(deck)
             self.uow.commit()
@@ -96,7 +102,7 @@ class DeckWriteableUseCaseImpl(DeckWriteableUseCase):
 
         return DeckDigestResponse.from_entity(deck_updated)
 
-    def delete_deck(self, id: str, owner_id: int):
+    def delete_deck(self, id: int, owner_id: int):
         try:
             existing_dataset = self.uow.deck_repository.find_by_id_and_owner_id(
                 id, owner_id

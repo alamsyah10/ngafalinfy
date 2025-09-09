@@ -8,13 +8,17 @@ from src.domain.model.user.user import User
 
 class CreateUserRequest(CustomBaseModel):
     email: str = Field(examples=["test@gmail.com"], description="User email")
-    display_name: str = Field(examples=["Tester"], description="User display name")
-    provider: str = Field(examples=["Google"], description=["User account provider"])
+    display_name: str | None = Field(
+        examples=["Tester"], description="User display name"
+    )
+    provider: str | None = Field(
+        examples=["Google"], description="User account provider"
+    )
 
 
 class AuthUserResponse(CustomBaseModel):
-    id: int = Field(examples=[1], description="Authenticated")
-    email: str
+    id: int | None = Field(examples=[1], description="Authenticated")
+    email: str = Field(examples=["test@gmail.com"], description="User email")
     display_name: str | None = None
     picture_url: str | None = None
 

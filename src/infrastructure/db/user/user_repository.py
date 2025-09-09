@@ -46,11 +46,11 @@ class UserRepositoryImpl(UserRepository):
             return self.create(user)
 
         if user.provider is None:
-            user.provider = "google"
+            user = user.update(provider="google")
         if user.provider_sub is None:
-            user.provider_sub = sub
+            user = user.update(provider_sub=sub)
         if picture and user.picture_url != picture:
-            user.picture_url = picture
+            user = user.update(picture_url=picture)
 
         self.session.flush()
         return user

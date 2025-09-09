@@ -10,7 +10,7 @@ from .deck_readable_service import DeckReadableService
 
 class DeckReadableUseCase(ABC):
     """
-    DeckReadableUseCase defines a query usecase interface related User entity.
+    DeckReadableUseCase defines a query usecase interface related Deck entity.
     """
 
     @abstractmethod

@@ -1,19 +1,19 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
 
 from src.api.composition.auth import get_current_user_id_usecase
 from src.api.composition.checkhealth import (
     health_check_usecase,
-    me_usecase,
     test_access_usecase,
 )
+from src.api.composition.user import user_read_usecase
 from src.api.error_schema.common import (
     ErrorMessageAuthorizationError,
     ErrorMessageInternalServerError,
     ErrorMessageUserNotFoundError,
 )
-from src.domain.model.health import HealthCheckResponse, MeResponse, TestAccessResponse
-from src.infrastructure.db.core import get_session
+from src.domain.model.health import HealthCheckResponse, TestAccessResponse
+from src.usecase.user.user_readable_usecase import UserReadableUseCase
+from src.usecase.user.user_schema import AuthUserResponse
 
 router = APIRouter(prefix="/checkhealth", tags=["checkhealth"])
 
@@ -62,7 +62,7 @@ def test_access(
 
 @router.get(
     "/me",
-    response_model=MeResponse,
+    response_model=AuthUserResponse,
     status_code=status.HTTP_200_OK,
     operation_id="who_am_i",
     summary="Current User Info",
@@ -83,7 +83,7 @@ def test_access(
     },
 )
 def me(
-    db: Session = Depends(get_session),
     user_id: int = Depends(get_current_user_id_usecase),
-) -> MeResponse:
-    return me_usecase(db, user_id)
+    usecase: UserReadableUseCase = Depends(user_read_usecase),
+) -> AuthUserResponse:
+    return usecase.fetch_user(user_id)

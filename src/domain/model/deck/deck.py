@@ -11,7 +11,7 @@ class Deck:
     created_at: datetime = field(default=datetime.now())
     updated_at: datetime = field(default=datetime.now())
 
-    def get_id(self) -> int:
+    def get_id(self) -> int | None:
         return self.id
 
     def update(

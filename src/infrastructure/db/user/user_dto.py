@@ -28,7 +28,7 @@ class UserDTO(UserTable):
         )
 
     @classmethod
-    def from_entity(cls, entity: UserTable) -> "UserDTO":
+    def from_entity(cls, entity: User) -> "UserDTO":
         return cls(
             id=entity.id,
             email=entity.email,

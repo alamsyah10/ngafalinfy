@@ -21,7 +21,7 @@ class UpdateDeckRequest(CustomBaseModel):
 
 
 class DeckDigestResponse(CustomBaseModel):
-    id: int = Field(examples=[1], description="Deck ID")
+    id: int | None = Field(examples=[1], description="Deck ID")
     name: str = Field(examples=["My Deck"], description="Deck name")
     owner_id: int = Field(examples=[1], description="Owner user ID")
     description: str | None = Field(

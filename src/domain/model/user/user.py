@@ -5,8 +5,8 @@ from datetime import datetime
 @dataclass(frozen=True, slots=True, kw_only=True)
 class User:
     email: str
-    display_name: str
-    provider: str  # e.g., "google", "local"
+    display_name: str | None
+    provider: str | None  # e.g., "google", "local"
 
     provider_sub: str | None = None
     picture_url: str | None = None
@@ -24,14 +24,18 @@ class User:
         display_name: str | None = None,
         picture_url: str | None = None,
         is_active: bool | None = None,
+        provider: str | None = None,
+        provider_sub: str | None = None,
     ) -> "User":
         return User(
             email=self.email,
             display_name=display_name
             if display_name is not None
             else self.display_name,
-            provider=self.provider,
-            provider_sub=self.provider_sub,
+            provider=provider if provider is not None else self.provider,
+            provider_sub=provider_sub
+            if provider_sub is not None
+            else self.provider_sub,
             picture_url=picture_url if picture_url is not None else self.picture_url,
             password_hash=self.password_hash,
             id=self.id,
@@ -44,7 +48,7 @@ class User:
     def new_google_user(
         cls,
         email: str,
-        display_name: str,
+        display_name: str | None,
         provider_sub: str,
         picture_url: str | None = None,
     ) -> "User":
