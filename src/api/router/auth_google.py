@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import JSONResponse
 
 from src.api.composition.auth_google import (
     google_callback_usecase,
@@ -12,9 +13,8 @@ from src.api.error_schema.common import (
     ErrorMessageOAuthAuthenticationFailed,
     ErrorMessageOAuthInvalidUserInfo,
 )
-from src.usecase.user.user_schema import (
-    AuthTokenResponse,
-)
+from src.config import settings
+from src.usecase.user.user_schema import AuthTokenResponse, LogoutResponse
 from src.usecase.user.user_writeable_usecase import UserWriteableUsecase
 
 router = APIRouter(prefix="/auth/google", tags=["auth:google"])
@@ -41,7 +41,7 @@ async def google_login(
 
 @router.get(
     "/callback",
-    response_model=AuthTokenResponse,
+    response_model=JSONResponse,
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_400_BAD_REQUEST: {
@@ -64,11 +64,23 @@ async def google_callback(
     request: Request,
     usecase: UserWriteableUsecase = Depends(google_callback_usecase),
 ):
-    return await usecase.oauth_callback(request)
+    payload: AuthTokenResponse = await usecase.oauth_callback(request)
+    resp = JSONResponse(payload.model_dump())
+    resp.set_cookie(
+        key=settings.COOKIE_NAME,
+        value=payload.access_token,
+        httponly=True,
+        secure=settings.SESSION_HTTPS_ONLY,
+        samesite=settings.SESSION_SAMESITE,
+        max_age=settings.JWT_EXPIRES_MIN * 60,
+        path="/",
+    )
+    return resp
 
 
 @router.post(
     "/logout",
+    response_model=JSONResponse,
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -83,4 +95,9 @@ async def google_logout(
     request: Request,
     usecase: UserWriteableUsecase = Depends(google_logout_usecase),
 ):
-    return usecase.logout(request)
+    payload: LogoutResponse = usecase.logout(request)
+
+    resp = JSONResponse(payload.model_dump())
+    resp.delete_cookie(key=settings.COOKIE_NAME, path="/")
+
+    return resp

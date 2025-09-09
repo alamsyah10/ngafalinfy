@@ -4,7 +4,6 @@ from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from src.config import settings
@@ -147,23 +146,11 @@ class UserWriteableUsecaseImpl(UserWriteableUsecase):
                 {"sub": str(dto.id), "email": dto.email, "name": dto.display_name or ""}
             )
 
-            payload = AuthTokenResponse.from_parts(
+            response = AuthTokenResponse.from_parts(
                 access_token=access, token_type="bearer", user=dto.to_auth_user()
             )
 
-            resp = JSONResponse(payload.model_dump())
-
-            resp.set_cookie(
-                key=settings.COOKIE_NAME,
-                value=access,
-                httponly=True,
-                secure=settings.SESSION_HTTPS_ONLY,
-                samesite=settings.SESSION_SAMESITE,
-                max_age=settings.JWT_EXPIRES_MIN * 60,
-                path="/",
-            )
-
-            return resp
+            return response
 
         except (
             OAuthClientNotConfiguredError,
@@ -180,8 +167,6 @@ class UserWriteableUsecaseImpl(UserWriteableUsecase):
         if not token:
             raise UnauthorizedError("No active session")
 
-        payload = LogoutResponse.from_parts(message="Signed out successfully")
+        response = LogoutResponse.from_parts(message="Signed out successfully")
 
-        resp = JSONResponse(payload.model_dump())
-        resp.delete_cookie(key=settings.COOKIE_NAME, path="/")
-        return resp
+        return response
