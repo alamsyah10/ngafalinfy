@@ -1,25 +1,43 @@
-from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from src.infrastructure.db.core import get_session
 from src.infrastructure.db.user.user_repository import UserRepositoryImpl
-from src.infrastructure.security.oauth_google import oauth
-from src.usecase.user.user_writeable_usecase import UserWriteableUsecase
+from src.infrastructure.db.user.user_repository_usecase import (
+    UserWriteableUseCaseUnitOfWorkImpl,
+)
+from src.infrastructure.security.oauth_google import get_oauth, get_oauth_client_factory
+from src.usecase.user.user_writeable_usecase import (
+    UserWriteableUsecase,
+    UserWriteableUsecaseImpl,
+)
 
 
-async def google_login_usecase(request: Request):
-    uc = UserWriteableUsecase(oauth_client_factory=oauth.create_client)
-    return await uc.login_redirect(request)
-
-
-async def google_callback_usecase(request: Request, db: Session) -> JSONResponse:
-    uc = UserWriteableUsecase(
-        oauth_client_factory=oauth.create_client,
-        repo=UserRepositoryImpl(db=db),
+def _provide_usecase(
+    db: Session = Depends(get_session),
+    oauth=Depends(get_oauth),
+) -> UserWriteableUsecase:
+    uow = UserWriteableUseCaseUnitOfWorkImpl(
+        session=db,
+        user_repository=UserRepositoryImpl(db),
+        oauth_client_factory=get_oauth_client_factory(oauth),
     )
-    return await uc.oauth_callback(request, db)
+    return UserWriteableUsecaseImpl(uow)
 
 
-def google_logout_usecase(request: Request) -> JSONResponse:
-    uc = UserWriteableUsecase(oauth_client_factory=oauth.create_client)
-    return uc.logout(request)
+def google_login_usecase(
+    usecase: UserWriteableUsecase = Depends(_provide_usecase),
+) -> UserWriteableUsecase:
+    return usecase
+
+
+def google_callback_usecase(
+    usecase: UserWriteableUsecase = Depends(_provide_usecase),
+) -> UserWriteableUsecase:
+    return usecase
+
+
+def google_logout_usecase(
+    usecase: UserWriteableUsecase = Depends(_provide_usecase),
+) -> UserWriteableUsecase:
+    return usecase

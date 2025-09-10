@@ -34,6 +34,13 @@ class UserNotFoundError(ApplicationError):
         super().__init__(status=self.status, message=message)
 
 
+class ResourceNotFoundError(ApplicationError):
+    status = 404
+
+    def __init__(self, message):
+        super().__init__(status=self.status, message=message)
+
+
 class ResourceConflictError(ApplicationError):
     status = 409
 

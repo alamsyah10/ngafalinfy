@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, Request, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from src.api.composition.auth_google import (
     google_callback_usecase,
@@ -13,8 +12,9 @@ from src.api.error_schema.common import (
     ErrorMessageOAuthAuthenticationFailed,
     ErrorMessageOAuthInvalidUserInfo,
 )
-from src.domain.model.auth import AuthTokenResponse
-from src.infrastructure.db.core import get_session
+from src.config import settings
+from src.usecase.user.user_schema import AuthTokenResponse, LogoutResponse
+from src.usecase.user.user_writeable_usecase import UserWriteableUsecase
 
 router = APIRouter(prefix="/auth/google", tags=["auth:google"])
 
@@ -28,11 +28,14 @@ router = APIRouter(prefix="/auth/google", tags=["auth:google"])
             "description": "OAuth client not configured",
         }
     },
+    operation_id="google_login",
     summary="Start Google OAuth login",
-    description="Redirects the user to Google for authentication.",
 )
-async def google_login(request: Request):
-    return await google_login_usecase(request)
+async def google_login(
+    request: Request,
+    usecase: UserWriteableUsecase = Depends(google_login_usecase),
+):
+    return await usecase.login_redirect(request)
 
 
 @router.get(
@@ -53,15 +56,30 @@ async def google_login(request: Request):
             "description": "Authentication failed",
         },
     },
+    operation_id="google_callback",
     summary="Handle Google OAuth callback",
-    description="Exchanges the Google OAuth code for a token and logs in the user.",
 )
-async def google_callback(request: Request, db: Session = Depends(get_session)):
-    return await google_callback_usecase(request, db)
+async def google_callback(
+    request: Request,
+    response: Response,
+    usecase: UserWriteableUsecase = Depends(google_callback_usecase),
+):
+    payload: AuthTokenResponse = await usecase.oauth_callback(request)
+    response.set_cookie(
+        key=settings.COOKIE_NAME,
+        value=payload.access_token,
+        httponly=True,
+        secure=settings.SESSION_HTTPS_ONLY,
+        samesite=settings.SESSION_SAMESITE,
+        max_age=settings.JWT_EXPIRES_MIN * 60,
+        path="/",
+    )
+    return payload
 
 
 @router.post(
     "/logout",
+    response_model=LogoutResponse,
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -69,8 +87,14 @@ async def google_callback(request: Request, db: Session = Depends(get_session)):
             "description": "No active session",
         },
     },
+    operation_id="google_logout",
     summary="Log out",
-    description="Clears the authentication cookie and ends the session.",
 )
-async def google_logout(request: Request):
-    return google_logout_usecase(request)
+async def google_logout(
+    request: Request,
+    response: Response,
+    usecase: UserWriteableUsecase = Depends(google_logout_usecase),
+):
+    payload: LogoutResponse = usecase.logout(request)
+    response.delete_cookie(key=settings.COOKIE_NAME, path="/")
+    return payload

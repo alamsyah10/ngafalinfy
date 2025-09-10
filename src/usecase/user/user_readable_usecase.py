@@ -1,21 +1,34 @@
-from sqlalchemy.orm import Session
+from abc import ABC, abstractmethod
 
-from src.domain.error.base import InternalServerError, UserNotFoundError
-from src.domain.repository.user import UserRepository
-from src.infrastructure.db.user.user_dto import UserDTO
+from src.domain.error.base import UserNotFoundError
+from src.usecase.user.user_readable_service import UserReadableService
+from src.usecase.user.user_schema import AuthUserResponse
 
 
-class UserReadableUsecase:
-    def __init__(self, repo: UserRepository):
-        self.repo = repo
+class UserReadableUseCase(ABC):
+    """
+    UserReadableUseCase defines a query usecase interface related User entity.
+    """
 
-    def get_me(self, db: Session, user_id: int) -> UserDTO:
+    @abstractmethod
+    def fetch_user(self, id: int) -> AuthUserResponse:
+        raise NotImplementedError
+
+
+class UserReadableUseCaseImpl(UserReadableUseCase):
+    """
+    UserReadableUseCaseImpl implements a query usecases related User entity.
+    """
+
+    def __init__(self, user_service: UserReadableService):
+        self.user_service: UserReadableService = user_service
+
+    def fetch_user(self, id: int) -> AuthUserResponse:
         try:
-            user = db.get(self.repo.entity_cls, user_id)
-        except Exception:
-            raise InternalServerError("Database unavailable")
+            user = self.user_service.find_by_id(id)
+            if user is None:
+                raise UserNotFoundError(id)
+        except:
+            raise
 
-        if not user:
-            raise UserNotFoundError(f"User with id={user_id} not found")
-
-        return UserDTO.from_entity(user)
+        return user
