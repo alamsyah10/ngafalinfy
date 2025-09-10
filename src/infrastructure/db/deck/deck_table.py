@@ -3,9 +3,9 @@ from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+# from src.infrastructure.db.card.card_dto import CardDTO
 from src.infrastructure.db.core import Base
 from src.infrastructure.db.user.user_dto import UserDTO
-from src.infrastructure.db.user.user_table import UserTable
 
 
 class DeckTable(Base):
@@ -18,5 +18,7 @@ class DeckTable(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
-    owner: Mapped[UserTable] = relationship(UserDTO)
-    # cards = relationship("CardTable", back_populates="deck", cascade="all, delete-orphan")
+    owner: Mapped[UserDTO] = relationship(UserDTO)
+    # cards: Mapped[list[CardDTO]] = relationship(
+    #     CardDTO, back_populates="deck", cascade="all, delete-orphan"
+    # )
