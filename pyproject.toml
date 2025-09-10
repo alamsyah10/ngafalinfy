@@ -30,13 +30,13 @@ version = { source = "file", path = "src/__init__.py" }
 distribution = false
 
 [tool.pdm.scripts]
-pyright = "pyright ./src"
-pyright_test = "pyright ./tests"
-ruff_lint = "ruff check ./src"
-ruff_lint_test = "ruff check ./tests"
-ruff_format = "ruff format ./src"
-ruff_format_test = "ruff format ./tests"
-test = "pytest ./tests"
+pyright = { cmd = "pyright ./src", env = { PYTHONPATH = "." } }
+pyright_test = { cmd = "pyright ./tests", env = { PYTHONPATH = "." } }
+ruff_lint = { cmd = "ruff check ./src", env = { PYTHONPATH = "." } }
+ruff_lint_test = { cmd = "ruff check ./tests", env = { PYTHONPATH = "." } }
+ruff_format = { cmd = "ruff format ./src", env = { PYTHONPATH = "." } }
+ruff_format_test = { cmd = "ruff format ./tests", env = { PYTHONPATH = "." } }
+test = { cmd = "pytest ./tests", env = { PYTHONPATH = "." } }
 format = { composite = ["ruff_format", "ruff_format_test"] }
 lint = { composite = [
     "ruff_lint",
