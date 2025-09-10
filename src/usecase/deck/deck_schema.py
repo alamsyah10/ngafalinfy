@@ -16,7 +16,7 @@ class CreateDeckRequest(CustomBaseModel):
 class UpdateDeckRequest(CustomBaseModel):
     name: str | None = Field(examples=["Updated Deck"], description="Deck name")
     description: str | None = Field(
-        examples=["This is my updated deck"], description="Deck description"
+        None, examples=["This is my updated deck"], description="Deck description"
     )
 
 
