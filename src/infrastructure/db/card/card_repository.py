@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from src.domain.model.card.card import Card
 from src.domain.repository.card import CardRepository
@@ -51,6 +52,17 @@ class CardRepositoryImpl(CardRepository):
             .first()
         )
         return dto.to_entity() if dto else None
+    
+    def get_next_due_by_deck_id(self, deck_id: int, now: datetime) -> Card | None:
+        dto = (
+            self.session.query(CardDTO)
+            .filter_by(deck_id=deck_id, is_active=True, suspended=False)
+            .filter(CardDTO.due_at <= now)
+            .order_by(CardDTO.due_at.asc())
+            .limit(1)
+            .first()
+        )
+        return dto.to_entity() if dto else None
 
     def create_card(self, card: Card):
         dto = CardDTO.from_entity(card)
@@ -62,13 +74,28 @@ class CardRepositoryImpl(CardRepository):
     def update_card(self, card: Card):
         try:
             row = self.session.query(CardDTO).filter_by(id=card.id).one()
+
+            # content fields
             row.front = card.front
             row.back = card.back
             row.notes = card.notes
+
+            # scheduling fields (IMPORTANT for study flow)
+            row.ease_factor = card.ease_factor
+            row.interval = card.interval
+            row.repetitions = card.repetitions
+            row.lapses = card.lapses
+            row.due_at = card.due_at
+            row.suspended = card.suspended
+
+            # status
             row.is_active = card.is_active
+
+            # timestamps
             row.updated_at = card.updated_at
         except:
             raise
+
 
     def delete_card_by_id(self, id: int):
         try:
