@@ -6,7 +6,7 @@ from src.domain.model.card.card_exception import (
     CardNotFoundError,
     NoActiveCardsInDeckError,
 )
-from src.usecase.card.card_schema import CardDigestResponse
+from src.usecase.card.card_schema import CardDigestResponse, DeckStatsResponse
 
 from .card_readable_service import CardReadableService
 
@@ -38,6 +38,10 @@ class CardReadableUseCase(ABC):
     def fetch_recent_cards(
         self, deck_id: int, params: Params, only_active: bool = False
     ) -> Page[CardDigestResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def fetch_deck_stats(self, deck_id: int) -> DeckStatsResponse:
         raise NotImplementedError
 
 
@@ -77,3 +81,6 @@ class CardReadableUseCaseImpl(CardReadableUseCase):
         return self.card_service.list_recent_by_deck_id(
             deck_id, params, only_active=only_active
         )
+
+    def fetch_deck_stats(self, deck_id: int) -> DeckStatsResponse:
+        return self.card_service.calculate_deck_stats(deck_id)

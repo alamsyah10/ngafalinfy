@@ -14,6 +14,7 @@ from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
     CardDigestResponse,
     CreateCardRequest,
+    DeckStatsResponse,
     UpdateCardRequest,
 )
 from src.usecase.card.card_writeable_usecase import CardWriteableUseCase
@@ -141,3 +142,71 @@ def delete_card(
 ):
     usecase.delete_card(id=card_id, deck_id=deck_id, owner_id=user_id)
     return PlainTextResponse("Accepted", status_code=status.HTTP_202_ACCEPTED)
+
+
+@router.get(
+    "/stats/summary",
+    response_model=DeckStatsResponse,
+    status_code=status.HTTP_200_OK,
+    operation_id="get_deck_stats",
+    summary="Get review statistics for a deck",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
+    },
+)
+def get_deck_stats(
+    deck_id: int = Path(..., description="Deck ID"),
+    user_id: int = Depends(get_current_user_id_usecase),
+    usecase: CardReadableUseCase = Depends(card_read_usecase),
+) -> DeckStatsResponse:
+    return usecase.fetch_deck_stats(deck_id=deck_id)
+
+
+@router.patch(
+    "/{card_id:int}/suspend",
+    response_model=CardDigestResponse,
+    status_code=status.HTTP_200_OK,
+    operation_id="toggle_suspend_card",
+    summary="Toggle suspend/unsuspend status of a card",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
+    },
+)
+def toggle_suspend_card(
+    deck_id: int = Path(..., description="Deck ID"),
+    card_id: int = Path(..., description="Card ID"),
+    user_id: int = Depends(get_current_user_id_usecase),
+    usecase: CardWriteableUseCase = Depends(card_write_usecase),
+) -> CardDigestResponse:
+    return usecase.suspend_card(id=card_id, deck_id=deck_id, owner_id=user_id)
+
+
+@router.post(
+    "/{card_id:int}/reset",
+    response_model=CardDigestResponse,
+    status_code=status.HTTP_200_OK,
+    operation_id="reset_card_scheduling",
+    summary="Reset card scheduling to initial state (new card)",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
+    },
+)
+def reset_card_scheduling(
+    deck_id: int = Path(..., description="Deck ID"),
+    card_id: int = Path(..., description="Card ID"),
+    user_id: int = Depends(get_current_user_id_usecase),
+    usecase: CardWriteableUseCase = Depends(card_write_usecase),
+) -> CardDigestResponse:
+    return usecase.reset_card_scheduling(id=card_id, deck_id=deck_id, owner_id=user_id)

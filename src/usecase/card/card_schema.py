@@ -85,3 +85,15 @@ class CardDigestResponse(CustomBaseModel):
             created_at=card.created_at,
             updated_at=card.updated_at,
         )
+
+
+class DeckStatsResponse(CustomBaseModel):
+    deck_id: int = Field(examples=[1], description="Deck ID")
+    total_cards: int = Field(examples=[10], description="Total number of cards in deck")
+    active_cards: int = Field(examples=[10], description="Number of active cards")
+    suspended_cards: int = Field(examples=[0], description="Number of suspended cards")
+    new_cards: int = Field(examples=[5], description="Cards with 0 repetitions (brand new)")
+    learning_cards: int = Field(examples=[3], description="Cards learning (1-10 reps)")
+    review_cards: int = Field(examples=[2], description="Cards in review (11+ reps)")
+    due_cards: int = Field(examples=[4], description="Cards due for review (due_at <= now)")
+    average_ease: float = Field(examples=[2.45], description="Average ease factor across all active cards")
