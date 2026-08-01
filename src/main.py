@@ -8,7 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api.log.logger import get_logger, init_logger
 from src.api.middleware.error_handling_middleware import ErrorHandlingMiddleware
 from src.api.middleware.router_logging_middleware import RouterLoggingMiddleware
-from src.api.router import auth_google, cards, checkhealth, decks
+from src.api.router import auth_google, cards, checkhealth, decks, review_logs, study
 from src.config import settings
 
 init_logger()
@@ -57,4 +57,6 @@ app.include_router(auth_google.router)
 app.include_router(checkhealth.router)
 app.include_router(decks.router)
 app.include_router(cards.router)
+app.include_router(review_logs.router)
+app.include_router(study.router)
 add_pagination(app)
