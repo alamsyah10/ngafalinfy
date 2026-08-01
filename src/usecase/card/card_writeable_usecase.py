@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from datetime import UTC
 
 from src.domain.model.card.card import Card
 from src.domain.model.card.card_exception import CardNotFoundError
@@ -55,6 +56,16 @@ class CardWriteableUseCase(ABC):
 
     @abstractmethod
     def delete_card(self, id: int, deck_id: int, owner_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def suspend_card(self, id: int, deck_id: int, owner_id: int) -> CardDigestResponse:
+        raise NotImplementedError
+
+    @abstractmethod
+    def reset_card_scheduling(
+        self, id: int, deck_id: int, owner_id: int
+    ) -> CardDigestResponse:
         raise NotImplementedError
 
 
@@ -130,3 +141,58 @@ class CardWriteableUseCaseImpl(CardWriteableUseCase):
         except Exception:
             self.uow.rollback()
             raise
+
+    def suspend_card(self, id: int, deck_id: int, owner_id: int) -> CardDigestResponse:
+        """Toggle the suspended flag for a card."""
+        try:
+            self.uow.begin()
+            self._ensure_deck_owned(deck_id, owner_id)
+
+            existing = self.uow.card_repository.find_by_id_and_deck_id(id, deck_id)
+            if existing is None:
+                raise CardNotFoundError(id)
+
+            # Toggle suspended flag
+            updated = existing.update(suspended=not existing.suspended)
+            self.uow.card_repository.update_card(updated)
+            self.uow.commit()
+        except Exception:
+            self.uow.rollback()
+            raise
+
+        return CardDigestResponse.from_entity(updated)
+
+    def reset_card_scheduling(
+        self, id: int, deck_id: int, owner_id: int
+    ) -> CardDigestResponse:
+        """Reset card scheduling to initial state (new card)."""
+        try:
+            self.uow.begin()
+            self._ensure_deck_owned(deck_id, owner_id)
+
+            existing = self.uow.card_repository.find_by_id_and_deck_id(id, deck_id)
+            if existing is None:
+                raise CardNotFoundError(id)
+
+            # Reset to initial state
+            from datetime import datetime, timedelta
+
+            tomorrow = datetime.now(UTC).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            tomorrow += timedelta(days=1)
+
+            updated = existing.update(
+                ease_factor=2.5,
+                interval=0,
+                repetitions=0,
+                lapses=0,
+                due_at=tomorrow,
+            )
+            self.uow.card_repository.update_card(updated)
+            self.uow.commit()
+        except Exception:
+            self.uow.rollback()
+            raise
+
+        return CardDigestResponse.from_entity(updated)

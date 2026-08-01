@@ -1,11 +1,10 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from src.config import settings
-import src.infrastructure.db  # noqa
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+import src.infrastructure.db  # noqa
+from src.config import settings
 from src.infrastructure.db.core import Base
 
 # this is the Alembic Config object, which provides

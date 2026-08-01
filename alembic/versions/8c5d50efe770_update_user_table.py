@@ -5,17 +5,13 @@ Revises: bc90df2d2caa
 Create Date: 2025-09-07 11:58:58.593340
 
 """
-from typing import Sequence, Union
-
-from alembic import op
-import sqlalchemy as sa
-
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
-revision: str = '8c5d50efe770'
-down_revision: Union[str, Sequence[str], None] = 'bc90df2d2caa'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "8c5d50efe770"
+down_revision: str | Sequence[str] | None = "bc90df2d2caa"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

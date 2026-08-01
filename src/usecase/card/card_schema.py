@@ -24,6 +24,36 @@ class UpdateCardRequest(CustomBaseModel):
     notes: str | None = Field(
         default=None, examples=["Casual usage"], description="New notes"
     )
+    ease_factor: float | None = Field(
+        default=None,
+        examples=[2.5],
+        description="Determines the ease of the card. The higher it is, the faster the review interval",
+    )
+    interval: int | None = Field(
+        default=None,
+        examples=[0],
+        description="The number of days until the next review. Initially small, then increases according to the SM-2 algorithm",
+    )
+    repetitions: int | None = Field(
+        default=None,
+        examples=[0],
+        description="Number of consecutive correct answers. Used to determine the learning phase (new, learning, review)",
+    )
+    lapses: int | None = Field(
+        default=None,
+        examples=[0],
+        description="The number of times the user forgot to answer a card. Can be used for statistics and interval penalties",
+    )
+    due_at: datetime | None = Field(
+        default=None,
+        examples=["2025-09-02T12:34:56"],
+        description="The due time of the next review. Becomes the query key to display 'due' cards",
+    )
+    suspended: bool | None = Field(
+        default=None,
+        examples=[False],
+        description="If true, the card is suspended from the review session (e.g. paused by the user)",
+    )
     is_active: bool | None = Field(
         default=None, examples=[True], description="Activate/Deactivate this card"
     )
@@ -35,6 +65,30 @@ class CardDigestResponse(CustomBaseModel):
     front: str = Field(examples=["Hello"], description="Front text")
     back: str = Field(examples=["こんにちは"], description="Back text")
     notes: str | None = Field(default=None, description="Optional notes")
+    ease_factor: float = Field(
+        examples=[2.5],
+        description="Determines the ease of the card. The higher it is, the faster the review interval",
+    )
+    interval: int = Field(
+        examples=[0],
+        description="The number of days until the next review. Initially small, then increases according to the SM-2 algorithm",
+    )
+    repetitions: int = Field(
+        examples=[0],
+        description="Number of consecutive correct answers. Used to determine the learning phase (new, learning, review)",
+    )
+    lapses: int = Field(
+        examples=[0],
+        description="The number of times the user forgot to answer a card. Can be used for statistics and interval penalties",
+    )
+    due_at: datetime = Field(
+        examples=["2025-09-02T12:34:56"],
+        description="The due time of the next review. Becomes the query key to display 'due' cards",
+    )
+    suspended: bool = Field(
+        examples=[False],
+        description="If true, the card is suspended from the review session (e.g. paused by the user)",
+    )
     is_active: bool = Field(examples=[True], description="Whether the card is active")
     created_at: datetime = Field(
         examples=["2025-09-02T12:34:56"], description="Creation timestamp"
@@ -51,7 +105,31 @@ class CardDigestResponse(CustomBaseModel):
             front=card.front,
             back=card.back,
             notes=card.notes,
+            ease_factor=card.ease_factor,
+            interval=card.interval,
+            repetitions=card.repetitions,
+            lapses=card.lapses,
+            due_at=card.due_at,
+            suspended=card.suspended,
             is_active=card.is_active,
             created_at=card.created_at,
             updated_at=card.updated_at,
         )
+
+
+class DeckStatsResponse(CustomBaseModel):
+    deck_id: int = Field(examples=[1], description="Deck ID")
+    total_cards: int = Field(examples=[10], description="Total number of cards in deck")
+    active_cards: int = Field(examples=[10], description="Number of active cards")
+    suspended_cards: int = Field(examples=[0], description="Number of suspended cards")
+    new_cards: int = Field(
+        examples=[5], description="Cards with 0 repetitions (brand new)"
+    )
+    learning_cards: int = Field(examples=[3], description="Cards learning (1-10 reps)")
+    review_cards: int = Field(examples=[2], description="Cards in review (11+ reps)")
+    due_cards: int = Field(
+        examples=[4], description="Cards due for review (due_at <= now)"
+    )
+    average_ease: float = Field(
+        examples=[2.45], description="Average ease factor across all active cards"
+    )

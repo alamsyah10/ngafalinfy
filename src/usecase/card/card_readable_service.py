@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from fastapi_pagination import Page, Params
 
-from src.usecase.card.card_schema import CardDigestResponse
+from src.usecase.card.card_schema import CardDigestResponse, DeckStatsResponse
 
 
 class CardReadableService(ABC):
@@ -39,4 +39,8 @@ class CardReadableService(ABC):
     def list_recent_by_deck_id(
         self, deck_id: int, params: Params, only_active: bool = False
     ) -> Page[CardDigestResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def calculate_deck_stats(self, deck_id: int) -> DeckStatsResponse:
         raise NotImplementedError

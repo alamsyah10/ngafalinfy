@@ -10,10 +10,19 @@ from fastapi_pagination import Page, Params, create_page
 from src.api.composition.auth import get_current_user_id_usecase
 from src.api.composition.card import card_read_usecase, card_write_usecase
 from src.api.composition.deck import deck_read_usecase, deck_write_usecase
+from src.api.composition.review_log import (
+    review_log_read_usecase,
+    review_log_write_usecase,
+)
+from src.api.composition.study import study_write_usecase
 from src.api.router.cards import router as cards_router
 from src.api.router.decks import router as decks_router
+from src.api.router.review_logs import router as review_logs_router
+from src.api.router.study import router as study_router
 from src.domain.error.base import ResourceNotFoundError
+from src.domain.model.card.card_exception import NoActiveCardsInDeckError
 from src.domain.model.deck.deck_exception import DeckNotFoundError
+from src.domain.model.review_log.review_log_exception import ReviewLogNotFoundError
 from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
     CardDigestResponse,
@@ -28,6 +37,17 @@ from src.usecase.deck.deck_schema import (
     UpdateDeckRequest,
 )
 from src.usecase.deck.deck_writeable_usecase import DeckWriteableUseCase
+from src.usecase.review_log.review_log_readable_usecase import ReviewLogReadableUseCase
+from src.usecase.review_log.review_log_schema import ReviewLogDigestResponse
+from src.usecase.review_log.review_log_writeable_usecase import (
+    ReviewLogWriteableUseCase,
+)
+from src.usecase.study.study_schema import (
+    ReviewAnswerRequest,
+    ReviewAnswerResponse,
+    StudyNextResponse,
+)
+from src.usecase.study.study_writeable_usecase import StudyWriteableUseCase
 
 
 class _FakeDeckReadable:
@@ -115,6 +135,12 @@ class _FakeCardReadable:
             front="犬",
             back="いぬ",
             notes="dog",
+            ease_factor=2.5,
+            interval=0,
+            repetitions=0,
+            lapses=0,
+            due_at=now,
+            suspended=False,
             is_active=True,
             created_at=now,
             updated_at=now,
@@ -167,6 +193,12 @@ class _FakeCardWriteable:
             front="猫",
             back="ねこ",
             notes="cat",
+            ease_factor=2.5,
+            interval=0,
+            repetitions=0,
+            lapses=0,
+            due_at=now,
+            suspended=False,
             is_active=True,
             created_at=now,
             updated_at=now,
@@ -190,6 +222,200 @@ class _FakeCardWriteable:
         return None
 
 
+class _FakeStudyWriteable:
+    """Mock StudyWriteableUseCase for testing"""
+
+    def __init__(self):
+        now = datetime.now()
+        self._card = CardDigestResponse(
+            id=123,
+            deck_id=10,
+            front="犬",
+            back="いぬ",
+            notes="dog",
+            ease_factor=2.5,
+            interval=0,
+            repetitions=0,
+            lapses=0,
+            due_at=now,
+            suspended=False,
+            is_active=True,
+            created_at=now,
+            updated_at=now,
+        )
+        self._log = ReviewLogDigestResponse(
+            id=1,
+            card_id=123,
+            user_id=42,
+            ease_given=4,
+            prev_interval=0,
+            new_interval=1,
+            prev_ease=2.5,
+            new_ease=2.6,
+            reviewed_at=now,
+        )
+
+    def fetch_next_due_card(self, deck_id: int, owner_id: int) -> StudyNextResponse:
+        """Return next due card or raise NoActiveCardsInDeckError"""
+        if deck_id == 404:
+            raise DeckNotFoundError(deck_id)
+        if deck_id == 999:
+            raise NoActiveCardsInDeckError(deck_id)
+
+        return StudyNextResponse(
+            card=self._card.model_copy(update={"deck_id": deck_id})
+        )
+
+    def answer_card(
+        self,
+        deck_id: int,
+        card_id: int,
+        owner_id: int,
+        req: ReviewAnswerRequest,
+    ) -> ReviewAnswerResponse:
+        """Process answer and return updated card + log"""
+        if deck_id == 404:
+            raise DeckNotFoundError(deck_id)
+
+        now = datetime.now()
+        updated_card = self._card.model_copy(
+            update={
+                "id": card_id,
+                "deck_id": deck_id,
+                "ease_factor": 2.6,
+                "interval": 1,
+                "repetitions": 1,
+                "due_at": now,
+            }
+        )
+        log = self._log.model_copy(
+            update={
+                "card_id": card_id,
+                "ease_given": req.ease_given,
+                "reviewed_at": now,
+            }
+        )
+
+        return ReviewAnswerResponse(card=updated_card, log=log)
+
+
+class _FakeReviewLogReadable:
+    """Mock ReviewLogReadableUseCase for testing"""
+
+    def __init__(self):
+        now = datetime.now()
+        self._log = ReviewLogDigestResponse(
+            id=1,
+            card_id=123,
+            user_id=42,
+            ease_given=4,
+            prev_interval=0,
+            new_interval=1,
+            prev_ease=2.5,
+            new_ease=2.6,
+            reviewed_at=now,
+        )
+
+    def fetch_log_by_id(self, id: int) -> ReviewLogDigestResponse:
+        if id == 404:
+            raise ReviewLogNotFoundError(id)
+        return self._log.model_copy(update={"id": id})
+
+    def fetch_logs_by_card_id(
+        self,
+        card_id: int,
+        params: Params,
+        newest_first: bool = True,
+    ) -> Page[ReviewLogDigestResponse]:
+        items = [
+            self._log.model_copy(update={"id": i, "card_id": card_id})
+            for i in range(1, 4)
+        ]
+        if newest_first:
+            items = list(reversed(items))
+        return create_page(items, total=len(items), params=params)
+
+    def fetch_logs_by_deck_id(
+        self,
+        deck_id: int,
+        params: Params,
+        newest_first: bool = True,
+    ) -> Page[ReviewLogDigestResponse]:
+        if deck_id == 404:
+            raise DeckNotFoundError(deck_id)
+        items = [
+            self._log.model_copy(update={"id": i, "card_id": 100 + i})
+            for i in range(1, 4)
+        ]
+        if newest_first:
+            items = list(reversed(items))
+        return create_page(items, total=len(items), params=params)
+
+    def fetch_latest_log_by_card_id(self, card_id: int) -> ReviewLogDigestResponse:
+        return self._log.model_copy(update={"card_id": card_id})
+
+    def fetch_log_count_by_card_id(self, card_id: int) -> int:
+        return 5
+
+    def fetch_log_count_by_deck_id(self, deck_id: int) -> int:
+        return 15
+
+
+class _FakeReviewLogWriteable:
+    """Mock ReviewLogWriteableUseCase for testing"""
+
+    def __init__(self):
+        now = datetime.now()
+        self._log = ReviewLogDigestResponse(
+            id=999,
+            card_id=123,
+            user_id=42,
+            ease_given=4,
+            prev_interval=0,
+            new_interval=1,
+            prev_ease=2.5,
+            new_ease=2.6,
+            reviewed_at=now,
+        )
+
+    def create_log(
+        self,
+        deck_id: int,
+        card_id: int,
+        owner_id: int,
+        *,
+        ease_given: int,
+        prev_interval: int,
+        new_interval: int,
+        prev_ease: float,
+        new_ease: float,
+        reviewed_at: datetime | None = None,
+    ) -> ReviewLogDigestResponse:
+        if deck_id == 404:
+            raise DeckNotFoundError(deck_id)
+
+        now = datetime.now()
+        return self._log.model_copy(
+            update={
+                "id": 1001,
+                "card_id": card_id,
+                "user_id": owner_id,
+                "ease_given": ease_given,
+                "prev_interval": prev_interval,
+                "new_interval": new_interval,
+                "prev_ease": prev_ease,
+                "new_ease": new_ease,
+                "reviewed_at": reviewed_at or now,
+            }
+        )
+
+    def delete_log(self, id: int, deck_id: int, owner_id: int) -> None:
+        return None
+
+    def delete_logs_by_card_id(self, card_id: int, deck_id: int, owner_id: int) -> None:
+        return None
+
+
 @pytest.fixture
 def app() -> FastAPI:
     app = FastAPI()
@@ -203,6 +429,8 @@ def app() -> FastAPI:
 
     app.include_router(cards_router)
     app.include_router(decks_router)
+    app.include_router(study_router)
+    app.include_router(review_logs_router)
 
     # Dependency overrides (cast to satisfy type checker)
     app.dependency_overrides[get_current_user_id_usecase] = lambda: 42
@@ -218,6 +446,15 @@ def app() -> FastAPI:
     )
     app.dependency_overrides[card_write_usecase] = lambda: cast(
         CardWriteableUseCase, _FakeCardWriteable()
+    )
+    app.dependency_overrides[study_write_usecase] = lambda: cast(
+        StudyWriteableUseCase, _FakeStudyWriteable()
+    )
+    app.dependency_overrides[review_log_read_usecase] = lambda: cast(
+        ReviewLogReadableUseCase, _FakeReviewLogReadable()
+    )
+    app.dependency_overrides[review_log_write_usecase] = lambda: cast(
+        ReviewLogWriteableUseCase, _FakeReviewLogWriteable()
     )
 
     return app
