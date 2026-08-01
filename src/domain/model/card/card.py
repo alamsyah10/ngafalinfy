@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -13,11 +13,11 @@ class Card:
     interval: int = field(default=0)
     repetitions: int = field(default=0)
     lapses: int = field(default=0)
-    due_at: datetime = field(default=datetime.now())
+    due_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     suspended: bool = False
     is_active: bool = True
-    created_at: datetime = field(default=datetime.now())
-    updated_at: datetime = field(default=datetime.now())
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def get_id(self) -> int | None:
         return self.id
@@ -49,7 +49,7 @@ class Card:
             suspended=suspended if suspended is not None else self.suspended,
             is_active=is_active if is_active is not None else self.is_active,
             created_at=self.created_at,
-            updated_at=datetime.now(),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @classmethod
@@ -60,4 +60,15 @@ class Card:
         back: str,
         notes: str | None = None,
     ) -> "Card":
-        return cls(id=0, deck_id=deck_id, front=front, back=back, notes=notes)
+        # New cards are initially due tomorrow (not immediately)
+        tomorrow = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        tomorrow += timedelta(days=1)
+
+        return cls(
+            id=0,
+            deck_id=deck_id,
+            front=front,
+            back=back,
+            notes=notes,
+            due_at=tomorrow,
+        )
