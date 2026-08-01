@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -77,42 +77,68 @@ class CardReadableServiceImpl(CardReadableService):
 
     def calculate_deck_stats(self, deck_id: int) -> DeckStatsResponse:
         """Calculate comprehensive statistics for a deck."""
-        now = datetime.now(timezone.utc)
-        
+        now = datetime.now(UTC)
+
         # Total cards
         total = self.session.query(CardDTO).filter_by(deck_id=deck_id).count()
-        
+
         # Active and suspended
-        active = self.session.query(CardDTO).filter_by(deck_id=deck_id, is_active=True).count()
-        suspended = self.session.query(CardDTO).filter_by(deck_id=deck_id, suspended=True).count()
-        
+        active = (
+            self.session.query(CardDTO)
+            .filter_by(deck_id=deck_id, is_active=True)
+            .count()
+        )
+        suspended = (
+            self.session.query(CardDTO)
+            .filter_by(deck_id=deck_id, suspended=True)
+            .count()
+        )
+
         # Cards by learning phase (based on repetitions)
-        new_cards = self.session.query(CardDTO).filter_by(deck_id=deck_id, is_active=True, repetitions=0).count()
-        learning_cards = self.session.query(CardDTO).filter(
-            CardDTO.deck_id == deck_id,
-            CardDTO.is_active == True,
-            CardDTO.repetitions.between(1, 10)
-        ).count()
-        review_cards = self.session.query(CardDTO).filter(
-            CardDTO.deck_id == deck_id,
-            CardDTO.is_active == True,
-            CardDTO.repetitions > 10
-        ).count()
-        
+        new_cards = (
+            self.session.query(CardDTO)
+            .filter_by(deck_id=deck_id, is_active=True, repetitions=0)
+            .count()
+        )
+        learning_cards = (
+            self.session.query(CardDTO)
+            .filter(
+                CardDTO.deck_id == deck_id,
+                CardDTO.is_active,
+                CardDTO.repetitions.between(1, 10),
+            )
+            .count()
+        )
+        review_cards = (
+            self.session.query(CardDTO)
+            .filter(
+                CardDTO.deck_id == deck_id,
+                CardDTO.is_active,
+                CardDTO.repetitions > 10,
+            )
+            .count()
+        )
+
         # Due cards
-        due_cards = self.session.query(CardDTO).filter(
-            CardDTO.deck_id == deck_id,
-            CardDTO.is_active == True,
-            CardDTO.suspended == False,
-            CardDTO.due_at <= now
-        ).count()
-        
+        due_cards = (
+            self.session.query(CardDTO)
+            .filter(
+                CardDTO.deck_id == deck_id,
+                CardDTO.is_active,
+                ~CardDTO.suspended,
+                CardDTO.due_at <= now,
+            )
+            .count()
+        )
+
         # Average ease (only for active cards)
-        avg_ease_result = self.session.query(func.avg(CardDTO.ease_factor)).filter_by(
-            deck_id=deck_id, is_active=True
-        ).scalar()
+        avg_ease_result = (
+            self.session.query(func.avg(CardDTO.ease_factor))
+            .filter_by(deck_id=deck_id, is_active=True)
+            .scalar()
+        )
         avg_ease = float(avg_ease_result) if avg_ease_result else 2.5
-        
+
         return DeckStatsResponse(
             deck_id=deck_id,
             total_cards=total,

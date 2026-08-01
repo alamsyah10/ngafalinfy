@@ -7,7 +7,9 @@ from src.domain.repository.review_log import ReviewLogRepository
 from src.infrastructure.db.card.card_repository import CardRepositoryImpl
 from src.infrastructure.db.core import get_session
 from src.infrastructure.db.deck.deck_repository import DeckRepositoryImpl
-from src.infrastructure.db.review_log.review_log_repository import ReviewLogRepositoryImpl
+from src.infrastructure.db.review_log.review_log_repository import (
+    ReviewLogRepositoryImpl,
+)
 from src.infrastructure.db.study.study_repository_usecase import (
     StudyRepositoryUseCaseUnitOfWorkImpl,
 )

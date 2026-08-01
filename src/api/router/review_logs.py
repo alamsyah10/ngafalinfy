@@ -19,7 +19,9 @@ from src.api.error_schema.common import (
 from src.domain.model.common import CustomBaseModel
 from src.usecase.review_log.review_log_readable_usecase import ReviewLogReadableUseCase
 from src.usecase.review_log.review_log_schema import ReviewLogDigestResponse
-from src.usecase.review_log.review_log_writeable_usecase import ReviewLogWriteableUseCase
+from src.usecase.review_log.review_log_writeable_usecase import (
+    ReviewLogWriteableUseCase,
+)
 
 router = APIRouter(prefix="/decks/{deck_id:int}/review-logs", tags=["review-logs"])
 
@@ -67,7 +69,9 @@ class CreateReviewLogRequest(CustomBaseModel):
         status.HTTP_400_BAD_REQUEST: {"model": ErrorMessageValidationError},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
         status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def create_review_log(
@@ -119,7 +123,9 @@ def list_review_logs(
     responses={
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
         status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def get_review_log(
@@ -164,7 +170,9 @@ def list_review_logs_by_card(
     responses={
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
         status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def get_latest_review_log_by_card(

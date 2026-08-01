@@ -42,7 +42,7 @@ class CardRepository(ABC):
     @abstractmethod
     def get_random_active_by_deck_id(self, deck_id: int) -> Card | None:
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_next_due_by_deck_id(self, deck_id: int, now: datetime) -> Card | None:
         raise NotImplementedError

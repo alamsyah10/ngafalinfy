@@ -20,8 +20,8 @@ from src.api.router.decks import router as decks_router
 from src.api.router.review_logs import router as review_logs_router
 from src.api.router.study import router as study_router
 from src.domain.error.base import ResourceNotFoundError
-from src.domain.model.deck.deck_exception import DeckNotFoundError
 from src.domain.model.card.card_exception import NoActiveCardsInDeckError
+from src.domain.model.deck.deck_exception import DeckNotFoundError
 from src.domain.model.review_log.review_log_exception import ReviewLogNotFoundError
 from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
@@ -39,8 +39,14 @@ from src.usecase.deck.deck_schema import (
 from src.usecase.deck.deck_writeable_usecase import DeckWriteableUseCase
 from src.usecase.review_log.review_log_readable_usecase import ReviewLogReadableUseCase
 from src.usecase.review_log.review_log_schema import ReviewLogDigestResponse
-from src.usecase.review_log.review_log_writeable_usecase import ReviewLogWriteableUseCase
-from src.usecase.study.study_schema import ReviewAnswerRequest, ReviewAnswerResponse, StudyNextResponse
+from src.usecase.review_log.review_log_writeable_usecase import (
+    ReviewLogWriteableUseCase,
+)
+from src.usecase.study.study_schema import (
+    ReviewAnswerRequest,
+    ReviewAnswerResponse,
+    StudyNextResponse,
+)
 from src.usecase.study.study_writeable_usecase import StudyWriteableUseCase
 
 
@@ -256,7 +262,9 @@ class _FakeStudyWriteable:
         if deck_id == 999:
             raise NoActiveCardsInDeckError(deck_id)
 
-        return StudyNextResponse(card=self._card.model_copy(update={"deck_id": deck_id}))
+        return StudyNextResponse(
+            card=self._card.model_copy(update={"deck_id": deck_id})
+        )
 
     def answer_card(
         self,
@@ -336,9 +344,7 @@ class _FakeReviewLogReadable:
         if deck_id == 404:
             raise DeckNotFoundError(deck_id)
         items = [
-            self._log.model_copy(
-                update={"id": i, "card_id": 100 + i}
-            )
+            self._log.model_copy(update={"id": i, "card_id": 100 + i})
             for i in range(1, 4)
         ]
         if newest_first:
@@ -406,9 +412,7 @@ class _FakeReviewLogWriteable:
     def delete_log(self, id: int, deck_id: int, owner_id: int) -> None:
         return None
 
-    def delete_logs_by_card_id(
-        self, card_id: int, deck_id: int, owner_id: int
-    ) -> None:
+    def delete_logs_by_card_id(self, card_id: int, deck_id: int, owner_id: int) -> None:
         return None
 
 

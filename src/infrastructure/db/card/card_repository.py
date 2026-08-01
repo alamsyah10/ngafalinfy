@@ -1,7 +1,8 @@
+from datetime import datetime
+
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from src.domain.model.card.card import Card
 from src.domain.repository.card import CardRepository
@@ -52,7 +53,7 @@ class CardRepositoryImpl(CardRepository):
             .first()
         )
         return dto.to_entity() if dto else None
-    
+
     def get_next_due_by_deck_id(self, deck_id: int, now: datetime) -> Card | None:
         dto = (
             self.session.query(CardDTO)
@@ -95,7 +96,6 @@ class CardRepositoryImpl(CardRepository):
             row.updated_at = card.updated_at
         except:
             raise
-
 
     def delete_card_by_id(self, id: int):
         try:

@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.domain.model.card.card import Card
 from src.domain.model.card.card_exception import (
@@ -93,9 +93,11 @@ class StudyWriteableUseCaseImpl(StudyWriteableUseCase):
         """
         self._ensure_deck_owned(deck_id, owner_id)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
-        card = self.uow.card_repository.get_next_due_by_deck_id(deck_id=deck_id, now=now)
+        card = self.uow.card_repository.get_next_due_by_deck_id(
+            deck_id=deck_id, now=now
+        )
         if card is None:
             # MVP behavior: reuse existing error
             raise NoActiveCardsInDeckError(deck_id)
@@ -117,7 +119,7 @@ class StudyWriteableUseCaseImpl(StudyWriteableUseCase):
             self.uow.begin()  # Explicitly start transaction
             self._ensure_deck_owned(deck_id, owner_id)
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             card = self._ensure_card_in_deck(card_id, deck_id)
 
             # Optional safety checks

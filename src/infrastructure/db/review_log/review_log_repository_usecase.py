@@ -4,7 +4,7 @@ from src.domain.repository.card import CardRepository
 from src.domain.repository.deck import DeckRepository
 from src.domain.repository.review_log import ReviewLogRepository
 from src.usecase.review_log.review_log_writeable_usecase import (
-    ReviewLogWriteableUseCaseUnitOfWork
+    ReviewLogWriteableUseCaseUnitOfWork,
 )
 
 

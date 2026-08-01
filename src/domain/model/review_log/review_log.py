@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -44,5 +44,5 @@ class ReviewLog:
             new_interval=new_interval,
             prev_ease=prev_ease,
             new_ease=new_ease,
-            reviewed_at=reviewed_at if reviewed_at is not None else datetime.now(timezone.utc),
+            reviewed_at=reviewed_at if reviewed_at is not None else datetime.now(UTC),
         )

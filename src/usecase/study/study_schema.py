@@ -1,4 +1,5 @@
 from pydantic import Field
+
 from src.domain.model.common import CustomBaseModel
 from src.usecase.card.card_schema import CardDigestResponse
 from src.usecase.review_log.review_log_schema import ReviewLogDigestResponse

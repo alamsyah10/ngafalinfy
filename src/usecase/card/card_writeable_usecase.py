@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from datetime import UTC
 
 from src.domain.model.card.card import Card
 from src.domain.model.card.card_exception import CardNotFoundError
@@ -62,7 +63,9 @@ class CardWriteableUseCase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def reset_card_scheduling(self, id: int, deck_id: int, owner_id: int) -> CardDigestResponse:
+    def reset_card_scheduling(
+        self, id: int, deck_id: int, owner_id: int
+    ) -> CardDigestResponse:
         raise NotImplementedError
 
 
@@ -159,7 +162,9 @@ class CardWriteableUseCaseImpl(CardWriteableUseCase):
 
         return CardDigestResponse.from_entity(updated)
 
-    def reset_card_scheduling(self, id: int, deck_id: int, owner_id: int) -> CardDigestResponse:
+    def reset_card_scheduling(
+        self, id: int, deck_id: int, owner_id: int
+    ) -> CardDigestResponse:
         """Reset card scheduling to initial state (new card)."""
         try:
             self.uow.begin()
@@ -170,10 +175,13 @@ class CardWriteableUseCaseImpl(CardWriteableUseCase):
                 raise CardNotFoundError(id)
 
             # Reset to initial state
-            from datetime import datetime, timedelta, timezone
-            tomorrow = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+            from datetime import datetime, timedelta
+
+            tomorrow = datetime.now(UTC).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
             tomorrow += timedelta(days=1)
-            
+
             updated = existing.update(
                 ease_factor=2.5,
                 interval=0,

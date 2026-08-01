@@ -27,7 +27,9 @@ router = APIRouter(prefix="/decks/{deck_id:int}/study", tags=["study"])
     responses={
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
         status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def get_next_due_card(
@@ -48,7 +50,9 @@ def get_next_due_card(
         status.HTTP_400_BAD_REQUEST: {"model": ErrorMessageValidationError},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
         status.HTTP_404_NOT_FOUND: {"model": ErrorMessageResourceNotFoundError},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def answer_card(

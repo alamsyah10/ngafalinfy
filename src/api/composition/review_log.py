@@ -10,7 +10,9 @@ from src.infrastructure.db.deck.deck_repository import DeckRepositoryImpl
 from src.infrastructure.db.review_log.review_log_query_service import (
     ReviewLogReadableServiceImpl,
 )
-from src.infrastructure.db.review_log.review_log_repository import ReviewLogRepositoryImpl
+from src.infrastructure.db.review_log.review_log_repository import (
+    ReviewLogRepositoryImpl,
+)
 from src.infrastructure.db.review_log.review_log_repository_usecase import (
     ReviewLogRepositoryUseCaseUnitOfWorkImpl,
 )

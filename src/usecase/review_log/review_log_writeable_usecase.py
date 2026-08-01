@@ -66,9 +66,7 @@ class ReviewLogWriteableUseCase(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_logs_by_card_id(
-        self, card_id: int, deck_id: int, owner_id: int
-    ) -> None:
+    def delete_logs_by_card_id(self, card_id: int, deck_id: int, owner_id: int) -> None:
         raise NotImplementedError
 
 

@@ -50,7 +50,9 @@ class ReviewLogRepositoryImpl(ReviewLogRepository):
     ) -> list[ReviewLog]:
         q = self.session.query(ReviewLogDTO).filter_by(card_id=card_id)
         q = q.order_by(
-            ReviewLogDTO.reviewed_at.desc() if newest_first else ReviewLogDTO.reviewed_at.asc()
+            ReviewLogDTO.reviewed_at.desc()
+            if newest_first
+            else ReviewLogDTO.reviewed_at.asc()
         )
         if limit is not None:
             q = q.limit(limit)
@@ -87,7 +89,9 @@ class ReviewLogRepositoryImpl(ReviewLogRepository):
         )
 
         q = q.order_by(
-            ReviewLogDTO.reviewed_at.desc() if newest_first else ReviewLogDTO.reviewed_at.asc()
+            ReviewLogDTO.reviewed_at.desc()
+            if newest_first
+            else ReviewLogDTO.reviewed_at.asc()
         )
         if limit is not None:
             q = q.limit(limit)
