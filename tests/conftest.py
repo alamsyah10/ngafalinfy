@@ -15,14 +15,22 @@ from src.api.composition.review_log import (
     review_log_write_usecase,
 )
 from src.api.composition.study import study_write_usecase
+from src.api.composition.user_profile import (
+    user_profile_read_usecase,
+    user_profile_write_usecase,
+)
 from src.api.router.cards import router as cards_router
 from src.api.router.decks import router as decks_router
 from src.api.router.review_logs import router as review_logs_router
 from src.api.router.study import router as study_router
+from src.api.router.user_profile import router as user_profile_router
 from src.domain.error.base import ResourceNotFoundError
 from src.domain.model.card.card_exception import NoActiveCardsInDeckError
 from src.domain.model.deck.deck_exception import DeckNotFoundError
 from src.domain.model.review_log.review_log_exception import ReviewLogNotFoundError
+from src.domain.model.user.user_profile_exception import (
+    UserProfileNotFoundError,
+)
 from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
     CardDigestResponse,
@@ -48,6 +56,13 @@ from src.usecase.study.study_schema import (
     StudyNextResponse,
 )
 from src.usecase.study.study_writeable_usecase import StudyWriteableUseCase
+from src.usecase.user.user_profile_readable_usecase import UserProfileReadableUseCase
+from src.usecase.user.user_profile_schema import (
+    UpdateProfileRequest,
+    UserProfileResponse,
+    UserSettingsResponse,
+)
+from src.usecase.user.user_profile_writeable_usecase import UserProfileWriteableUseCase
 
 
 class _FakeDeckReadable:
@@ -416,6 +431,62 @@ class _FakeReviewLogWriteable:
         return None
 
 
+class _FakeUserProfileWriteable:
+    def __init__(self):
+        now = datetime.now()
+        self._profile = UserProfileResponse(
+            id=1,
+            user_id=42,
+            bio=None,
+            avatar_url=None,
+            phone=None,
+            location=None,
+            website=None,
+            created_at=now,
+            updated_at=now,
+        )
+
+    def get_or_create_profile(self, user_id: int) -> UserProfileResponse:
+        return self._profile.model_copy(update={"user_id": user_id})
+
+    def update_profile(
+        self, user_id: int, req: UpdateProfileRequest
+    ) -> UserProfileResponse:
+        return self._profile.model_copy(
+            update={"user_id": user_id, **req.model_dump(exclude_none=True)}
+        )
+
+    def get_or_create_settings(self, user_id: int) -> UserSettingsResponse:
+        raise NotImplementedError
+
+    def update_settings(self, user_id: int, req: object) -> UserSettingsResponse:
+        raise NotImplementedError
+
+
+class _FakeUserProfileReadable:
+    def __init__(self):
+        now = datetime.now()
+        self._profile = UserProfileResponse(
+            id=1,
+            user_id=42,
+            bio=None,
+            avatar_url=None,
+            phone=None,
+            location=None,
+            website=None,
+            created_at=now,
+            updated_at=now,
+        )
+
+    def fetch_profile(self, user_id: int) -> UserProfileResponse:
+        if user_id == 404:
+            raise UserProfileNotFoundError(user_id)
+        return self._profile.model_copy(update={"user_id": user_id})
+
+    def fetch_settings(self, user_id: int) -> UserSettingsResponse:
+        raise NotImplementedError
+
+
 @pytest.fixture
 def app() -> FastAPI:
     app = FastAPI()
@@ -431,6 +502,7 @@ def app() -> FastAPI:
     app.include_router(decks_router)
     app.include_router(study_router)
     app.include_router(review_logs_router)
+    app.include_router(user_profile_router)
 
     # Dependency overrides (cast to satisfy type checker)
     app.dependency_overrides[get_current_user_id_usecase] = lambda: 42
@@ -455,6 +527,12 @@ def app() -> FastAPI:
     )
     app.dependency_overrides[review_log_write_usecase] = lambda: cast(
         ReviewLogWriteableUseCase, _FakeReviewLogWriteable()
+    )
+    app.dependency_overrides[user_profile_write_usecase] = lambda: cast(
+        UserProfileWriteableUseCase, _FakeUserProfileWriteable()
+    )
+    app.dependency_overrides[user_profile_read_usecase] = lambda: cast(
+        UserProfileReadableUseCase, _FakeUserProfileReadable()
     )
 
     return app

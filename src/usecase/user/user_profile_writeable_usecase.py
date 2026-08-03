@@ -56,45 +56,36 @@ class UserProfileWriteableUseCaseImpl(UserProfileWriteableUseCase):
         self.uow = uow
 
     def get_or_create_profile(self, user_id: int) -> UserProfileResponse:
-        profile = self.uow.profile_repository.find_by_user_id(user_id)
-        if profile is None:
-            profile = UserProfile.default_for(user_id)
-            try:
-                self.uow.begin()
+        try:
+            self.uow.begin()
+            profile = self.uow.profile_repository.find_by_user_id(user_id)
+            if profile is None:
+                profile = UserProfile.default_for(user_id)
                 self.uow.profile_repository.create(profile)
-                self.uow.commit()
-                profile = self.uow.profile_repository.find_by_user_id(user_id)
-                assert profile is not None
-            except Exception:
-                self.uow.rollback()
-                raise
-        return _profile_to_response(profile)
+            self.uow.commit()
+        except Exception:
+            self.uow.rollback()
+            raise
+        fetched = self.uow.profile_repository.find_by_user_id(user_id)
+        assert fetched is not None
+        return _profile_to_response(fetched)
 
     def update_profile(
         self, user_id: int, req: UpdateProfileRequest
     ) -> UserProfileResponse:
-        profile = self.uow.profile_repository.find_by_user_id(user_id)
-        if profile is None:
-            profile = UserProfile.default_for(user_id)
-            try:
-                self.uow.begin()
-                self.uow.profile_repository.create(profile)
-                self.uow.commit()
-                profile = self.uow.profile_repository.find_by_user_id(user_id)
-                assert profile is not None
-            except Exception:
-                self.uow.rollback()
-                raise
-
-        updated = profile.update(
-            bio=req.bio,
-            avatar_url=req.avatar_url,
-            phone=req.phone,
-            location=req.location,
-            website=req.website,
-        )
         try:
             self.uow.begin()
+            profile = self.uow.profile_repository.find_by_user_id(user_id)
+            if profile is None:
+                profile = UserProfile.default_for(user_id)
+                self.uow.profile_repository.create(profile)
+            updated = profile.update(
+                bio=req.bio,
+                avatar_url=req.avatar_url,
+                phone=req.phone,
+                location=req.location,
+                website=req.website,
+            )
             self.uow.profile_repository.update(updated)
             self.uow.commit()
         except Exception:
@@ -103,45 +94,36 @@ class UserProfileWriteableUseCaseImpl(UserProfileWriteableUseCase):
         return _profile_to_response(updated)
 
     def get_or_create_settings(self, user_id: int) -> UserSettingsResponse:
-        settings = self.uow.settings_repository.find_by_user_id(user_id)
-        if settings is None:
-            settings = UserSettings.default_for(user_id)
-            try:
-                self.uow.begin()
+        try:
+            self.uow.begin()
+            settings = self.uow.settings_repository.find_by_user_id(user_id)
+            if settings is None:
+                settings = UserSettings.default_for(user_id)
                 self.uow.settings_repository.create(settings)
-                self.uow.commit()
-                settings = self.uow.settings_repository.find_by_user_id(user_id)
-                assert settings is not None
-            except Exception:
-                self.uow.rollback()
-                raise
-        return _settings_to_response(settings)
+            self.uow.commit()
+        except Exception:
+            self.uow.rollback()
+            raise
+        fetched = self.uow.settings_repository.find_by_user_id(user_id)
+        assert fetched is not None
+        return _settings_to_response(fetched)
 
     def update_settings(
         self, user_id: int, req: UpdateSettingsRequest
     ) -> UserSettingsResponse:
-        settings = self.uow.settings_repository.find_by_user_id(user_id)
-        if settings is None:
-            settings = UserSettings.default_for(user_id)
-            try:
-                self.uow.begin()
-                self.uow.settings_repository.create(settings)
-                self.uow.commit()
-                settings = self.uow.settings_repository.find_by_user_id(user_id)
-                assert settings is not None
-            except Exception:
-                self.uow.rollback()
-                raise
-
-        updated = settings.update(
-            language=req.language,
-            timezone=req.timezone,
-            theme=req.theme,
-            daily_review_goal=req.daily_review_goal,
-            notifications_enabled=req.notifications_enabled,
-        )
         try:
             self.uow.begin()
+            settings = self.uow.settings_repository.find_by_user_id(user_id)
+            if settings is None:
+                settings = UserSettings.default_for(user_id)
+                self.uow.settings_repository.create(settings)
+            updated = settings.update(
+                language=req.language,
+                timezone=req.timezone,
+                theme=req.theme,
+                daily_review_goal=req.daily_review_goal,
+                notifications_enabled=req.notifications_enabled,
+            )
             self.uow.settings_repository.update(updated)
             self.uow.commit()
         except Exception:
