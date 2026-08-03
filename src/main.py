@@ -16,6 +16,7 @@ from src.api.router import (
     review_logs,
     study,
     user_profile,
+    user_settings,
 )
 from src.config import settings
 
@@ -68,4 +69,5 @@ app.include_router(cards.router)
 app.include_router(review_logs.router)
 app.include_router(study.router)
 app.include_router(user_profile.router)
+app.include_router(user_settings.router)
 add_pagination(app)

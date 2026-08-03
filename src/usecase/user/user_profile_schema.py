@@ -43,9 +43,9 @@ class UserSettingsResponse(CustomBaseModel):
 
 
 class UpdateSettingsRequest(CustomBaseModel):
-    language: Language | None = None
+    language: Language | None = Field(default=None, strict=False)
     timezone: str | None = Field(default=None, max_length=50)
-    theme: ThemePreference | None = None
+    theme: ThemePreference | None = Field(default=None, strict=False)
     daily_review_goal: int | None = Field(default=None, ge=1, le=500)
     notifications_enabled: bool | None = None
 

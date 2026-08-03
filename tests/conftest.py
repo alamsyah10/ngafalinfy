@@ -24,6 +24,7 @@ from src.api.router.decks import router as decks_router
 from src.api.router.review_logs import router as review_logs_router
 from src.api.router.study import router as study_router
 from src.api.router.user_profile import router as user_profile_router
+from src.api.router.user_settings import router as user_settings_router
 from src.domain.error.base import ResourceNotFoundError
 from src.domain.model.card.card_exception import NoActiveCardsInDeckError
 from src.domain.model.deck.deck_exception import DeckNotFoundError
@@ -31,6 +32,7 @@ from src.domain.model.review_log.review_log_exception import ReviewLogNotFoundEr
 from src.domain.model.user.user_profile_exception import (
     UserProfileNotFoundError,
 )
+from src.domain.model.user.user_settings import Language, ThemePreference
 from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
     CardDigestResponse,
@@ -59,6 +61,7 @@ from src.usecase.study.study_writeable_usecase import StudyWriteableUseCase
 from src.usecase.user.user_profile_readable_usecase import UserProfileReadableUseCase
 from src.usecase.user.user_profile_schema import (
     UpdateProfileRequest,
+    UpdateSettingsRequest,
     UserProfileResponse,
     UserSettingsResponse,
 )
@@ -457,10 +460,36 @@ class _FakeUserProfileWriteable:
         )
 
     def get_or_create_settings(self, user_id: int) -> UserSettingsResponse:
-        raise NotImplementedError
+        now = datetime.now()
+        return UserSettingsResponse(
+            id=2,
+            user_id=user_id,
+            language=Language.EN,
+            timezone="UTC",
+            theme=ThemePreference.SYSTEM,
+            daily_review_goal=20,
+            notifications_enabled=True,
+            created_at=now,
+            updated_at=now,
+        )
 
-    def update_settings(self, user_id: int, req: object) -> UserSettingsResponse:
-        raise NotImplementedError
+    def update_settings(
+        self, user_id: int, req: UpdateSettingsRequest
+    ) -> UserSettingsResponse:
+        now = datetime.now()
+        return UserSettingsResponse(
+            id=2,
+            user_id=user_id,
+            language=req.language or Language.EN,
+            timezone=req.timezone or "UTC",
+            theme=req.theme or ThemePreference.SYSTEM,
+            daily_review_goal=req.daily_review_goal or 20,
+            notifications_enabled=req.notifications_enabled
+            if req.notifications_enabled is not None
+            else True,
+            created_at=now,
+            updated_at=now,
+        )
 
 
 class _FakeUserProfileReadable:
@@ -503,6 +532,7 @@ def app() -> FastAPI:
     app.include_router(study_router)
     app.include_router(review_logs_router)
     app.include_router(user_profile_router)
+    app.include_router(user_settings_router)
 
     # Dependency overrides (cast to satisfy type checker)
     app.dependency_overrides[get_current_user_id_usecase] = lambda: 42
