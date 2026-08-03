@@ -2,7 +2,6 @@ from fastapi import APIRouter, Body, Depends, status
 
 from src.api.composition.auth import get_current_user_id_usecase
 from src.api.composition.user_profile import (
-    user_profile_read_usecase,
     user_profile_write_usecase,
 )
 from src.api.error_schema.common import (
@@ -10,16 +9,13 @@ from src.api.error_schema.common import (
     ErrorMessageInternalServerError,
     ErrorMessageValidationError,
 )
-from src.usecase.user.user_profile_readable_usecase import UserProfileReadableUseCase
-from src.usecase.user.user_profile_schema import UpdateProfileRequest, UserProfileResponse
+from src.usecase.user.user_profile_schema import (
+    UpdateProfileRequest,
+    UserProfileResponse,
+)
 from src.usecase.user.user_profile_writeable_usecase import UserProfileWriteableUseCase
 
 router = APIRouter(prefix="/me/profile", tags=["user-profile"])
-
-_COMMON_RESPONSES = {
-    status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
-    status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessageInternalServerError},
-}
 
 
 @router.get(
@@ -28,7 +24,12 @@ _COMMON_RESPONSES = {
     status_code=status.HTTP_200_OK,
     operation_id="get_my_profile",
     summary="Get the current user's profile",
-    responses=_COMMON_RESPONSES,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
+    },
 )
 def get_my_profile(
     user_id: int = Depends(get_current_user_id_usecase),
@@ -45,8 +46,11 @@ def get_my_profile(
     operation_id="update_my_profile",
     summary="Update the current user's profile",
     responses={
-        **_COMMON_RESPONSES,
         status.HTTP_400_BAD_REQUEST: {"model": ErrorMessageValidationError},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessageAuthorizationError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": ErrorMessageInternalServerError
+        },
     },
 )
 def update_my_profile(

@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -21,12 +20,13 @@ class TestGetMyProfile:
         assert "website" in data
 
     def test_requires_auth(self, app, client: TestClient):
-        from src.api.composition.auth import get_current_user_id_usecase
         from fastapi import HTTPException
 
-        app.dependency_overrides[get_current_user_id_usecase] = lambda: (_ for _ in ()).throw(
-            HTTPException(status_code=401, detail="Unauthorized")
-        )
+        from src.api.composition.auth import get_current_user_id_usecase
+
+        app.dependency_overrides[get_current_user_id_usecase] = lambda: (
+            _ for _ in ()
+        ).throw(HTTPException(status_code=401, detail="Unauthorized"))
         res = client.get("/me/profile")
         assert res.status_code == 401
         # restore

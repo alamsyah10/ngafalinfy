@@ -8,7 +8,15 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api.log.logger import get_logger, init_logger
 from src.api.middleware.error_handling_middleware import ErrorHandlingMiddleware
 from src.api.middleware.router_logging_middleware import RouterLoggingMiddleware
-from src.api.router import auth_google, cards, checkhealth, decks, review_logs, study, user_profile
+from src.api.router import (
+    auth_google,
+    cards,
+    checkhealth,
+    decks,
+    review_logs,
+    study,
+    user_profile,
+)
 from src.config import settings
 
 init_logger()

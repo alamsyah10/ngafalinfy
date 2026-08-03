@@ -28,6 +28,9 @@ from src.domain.error.base import ResourceNotFoundError
 from src.domain.model.card.card_exception import NoActiveCardsInDeckError
 from src.domain.model.deck.deck_exception import DeckNotFoundError
 from src.domain.model.review_log.review_log_exception import ReviewLogNotFoundError
+from src.domain.model.user.user_profile_exception import (
+    UserProfileNotFoundError,
+)
 from src.usecase.card.card_readable_usecase import CardReadableUseCase
 from src.usecase.card.card_schema import (
     CardDigestResponse,
@@ -52,11 +55,6 @@ from src.usecase.study.study_schema import (
     ReviewAnswerResponse,
     StudyNextResponse,
 )
-from src.domain.model.user.user_profile_exception import (
-    UserProfileNotFoundError,
-    UserSettingsNotFoundError,
-)
-from src.domain.model.user.user_settings import Language, ThemePreference
 from src.usecase.study.study_writeable_usecase import StudyWriteableUseCase
 from src.usecase.user.user_profile_readable_usecase import UserProfileReadableUseCase
 from src.usecase.user.user_profile_schema import (
@@ -451,7 +449,9 @@ class _FakeUserProfileWriteable:
     def get_or_create_profile(self, user_id: int) -> UserProfileResponse:
         return self._profile.model_copy(update={"user_id": user_id})
 
-    def update_profile(self, user_id: int, req: UpdateProfileRequest) -> UserProfileResponse:
+    def update_profile(
+        self, user_id: int, req: UpdateProfileRequest
+    ) -> UserProfileResponse:
         return self._profile.model_copy(
             update={"user_id": user_id, **req.model_dump(exclude_none=True)}
         )
